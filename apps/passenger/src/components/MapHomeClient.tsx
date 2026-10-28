@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   Bell,
   Briefcase,
-  ChevronUp,
   Home,
   LocateFixed,
   MapPin,
@@ -25,6 +24,7 @@ import {
   NearbyDriverMarker,
   PassengerMarker,
 } from "@almosafar/maps/react";
+import { BottomSheet } from "@almosafar/ui";
 import type { MapPlace } from "@almosafar/maps";
 import { useBooking } from "@/context/BookingContext";
 import { useLocale } from "@/context/LocaleContext";
@@ -130,9 +130,14 @@ function MapHomeInner() {
     router.push("/booking/route");
   };
 
+  const sheetExpanded =
+    sheet === "expanded" || sheet === "pickup" || sheet === "dropoff";
+
+  const goToRoute = () => router.push("/booking/route");
+
   return (
     <div className="relative h-[calc(100dvh-6.5rem)] w-full">
-      <div className="absolute inset-0 z-0">
+      <div className="passenger-map-layer absolute inset-0 z-0">
         <MapView center={mapCenter} fitPoints={fitPoints.length ? fitPoints : undefined}>
           {gps && <PassengerMarker position={gps} />}
           {pickupLatLng && (
@@ -203,112 +208,105 @@ function MapHomeInner() {
         </p>
       )}
 
-      <div
-        className={`absolute inset-x-0 bottom-0 z-50 mx-auto max-w-lg pb-[calc(4rem+env(safe-area-inset-bottom))] transition-transform duration-300 ${
-          sheet === "expanded" || sheet === "pickup" || sheet === "dropoff"
-            ? "translate-y-0"
-            : "translate-y-[calc(100%-11rem)]"
-        }`}
+      <BottomSheet
+        expanded={sheetExpanded}
+        peek="min(42dvh, 22rem)"
+        bottomOffset="calc(4.25rem + env(safe-area-inset-bottom, 0px))"
+        onToggle={() =>
+          setSheet((s) => {
+            if (s === "pickup" || s === "dropoff") return "expanded";
+            return s === "collapsed" ? "expanded" : "collapsed";
+          })
+        }
       >
-        <div className="rounded-t-3xl bg-white px-4 pb-6 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,.12)]">
-          <button
-            type="button"
-            className="mx-auto mb-3 flex w-full justify-center py-1"
-            aria-label="Expand sheet"
-            onClick={() =>
-              setSheet((s) => (s === "collapsed" ? "expanded" : "collapsed"))
-            }
-          >
-            <ChevronUp className="h-6 w-6 text-slate-400" />
-          </button>
-
-          <button
-            type="button"
-            className="mb-3 flex w-full items-center gap-3 rounded-2xl bg-slate-100 px-4 py-4 text-left"
-            onClick={() => setSheet("dropoff")}
-          >
-            <MapPin className="h-5 w-5 text-brand" />
-            <div>
-              <p className="text-xs text-slate-500">{t("Where to?", "إلى أين؟")}</p>
-              <p className="font-semibold text-slate-900">
-                {booking.dropoff?.label ?? t("Choose destination", "اختر الوجهة")}
-              </p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className="mb-2 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-            onClick={() => setSheet("pickup")}
-          >
-            <LocateFixed className="h-4 w-4 text-slate-500" />
-            <span className="truncate text-slate-600">
-              {booking.pickup?.label ?? t("Pickup", "الانطلاق")}
-            </span>
-          </button>
-          <div className="mb-3 flex gap-2 text-xs">
-            <Link
-              href="/booking/pickup"
-              className="flex-1 rounded-lg border border-slate-200 py-2 text-center font-medium text-brand"
-            >
-              {t("Pick on list", "اختر من القائمة")}
-            </Link>
-            <Link
-              href="/booking/destination"
-              className="flex-1 rounded-lg border border-slate-200 py-2 text-center font-medium text-brand"
-            >
-              {t("Destination list", "قائمة الوجهات")}
-            </Link>
+        <button
+          type="button"
+          className="mb-3 flex w-full items-center gap-3 rounded-2xl bg-slate-100 px-4 py-4 text-left touch-manipulation"
+          onClick={() => setSheet("dropoff")}
+        >
+          <MapPin className="h-5 w-5 shrink-0 text-brand" />
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500">{t("Where to?", "إلى أين؟")}</p>
+            <p className="truncate font-semibold text-slate-900">
+              {booking.dropoff?.label ?? t("Choose destination", "اختر الوجهة")}
+            </p>
           </div>
+        </button>
 
-          {(sheet === "pickup" || sheet === "dropoff") && (
-            <div className="mb-4">
-              <LocationSearch
-                placeholder={
-                  sheet === "pickup"
-                    ? t("Search pickup", "ابحث عن الانطلاق")
-                    : t("Search destination", "ابحث عن الوجهة")
+        <button
+          type="button"
+          className="mb-2 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm touch-manipulation"
+          onClick={() => setSheet("pickup")}
+        >
+          <LocateFixed className="h-4 w-4 shrink-0 text-slate-500" />
+          <span className="truncate text-slate-600">
+            {booking.pickup?.label ?? t("Pickup", "الانطلاق")}
+          </span>
+        </button>
+        <div className="mb-3 flex gap-2 text-xs">
+          <button
+            type="button"
+            className="flex-1 rounded-lg border border-slate-200 py-2.5 text-center font-medium text-brand touch-manipulation active:bg-slate-50"
+            onClick={() => router.push("/booking/pickup")}
+          >
+            {t("Pick on list", "اختر من القائمة")}
+          </button>
+          <button
+            type="button"
+            className="flex-1 rounded-lg border border-slate-200 py-2.5 text-center font-medium text-brand touch-manipulation active:bg-slate-50"
+            onClick={() => router.push("/booking/destination")}
+          >
+            {t("Destination list", "قائمة الوجهات")}
+          </button>
+        </div>
+
+        {(sheet === "pickup" || sheet === "dropoff") && (
+          <div className="mb-4">
+            <LocationSearch
+              placeholder={
+                sheet === "pickup"
+                  ? t("Search pickup", "ابحث عن الانطلاق")
+                  : t("Search destination", "ابحث عن الوجهة")
+              }
+              onSelect={(place) => {
+                if (sheet === "pickup") {
+                  setPickup(addressFromPlace(place));
+                  setSheet("collapsed");
+                } else {
+                  onSelectDropoff(place);
                 }
-                onSelect={(place) => {
-                  if (sheet === "pickup") {
-                    setPickup(addressFromPlace(place));
-                    setSheet("collapsed");
-                  } else {
-                    onSelectDropoff(place);
-                  }
+              }}
+              autoFocus
+            />
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-semibold text-slate-700 touch-manipulation"
+                onClick={() => {
+                  const target = sheet === "pickup" ? booking.pickup : booking.dropoff;
+                  if (!target) return;
+                  setSavedPlace("home", target);
                 }}
-                autoFocus
-              />
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-semibold text-slate-700"
-                  onClick={() => {
-                    const target =
-                      sheet === "pickup" ? booking.pickup : booking.dropoff;
-                    if (!target) return;
-                    setSavedPlace("home", target);
-                  }}
-                >
-                  {t("Save as Home", "حفظ كالمنزل")}
-                </button>
-                <button
-                  type="button"
-                  className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-semibold text-slate-700"
-                  onClick={() => {
-                    const target =
-                      sheet === "pickup" ? booking.pickup : booking.dropoff;
-                    if (!target) return;
-                    setSavedPlace("work", target);
-                  }}
-                >
-                  {t("Save as Work", "حفظ كالعمل")}
-                </button>
-              </div>
+              >
+                {t("Save as Home", "حفظ كالمنزل")}
+              </button>
+              <button
+                type="button"
+                className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-semibold text-slate-700 touch-manipulation"
+                onClick={() => {
+                  const target = sheet === "pickup" ? booking.pickup : booking.dropoff;
+                  if (!target) return;
+                  setSavedPlace("work", target);
+                }}
+              >
+                {t("Save as Work", "حفظ كالعمل")}
+              </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {(sheet === "expanded" || sheet === "collapsed") && booking.recentDestinations.length > 0 && (
+        {(sheet === "expanded" || sheet === "collapsed") &&
+          booking.recentDestinations.length > 0 && (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 {(["home", "work"] as const).map((kind) => {
@@ -319,7 +317,7 @@ function MapHomeInner() {
                     <button
                       key={kind}
                       type="button"
-                      className="flex flex-col items-start gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left active:border-brand"
+                      className="flex flex-col items-start gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left touch-manipulation active:border-brand"
                       onClick={() =>
                         onSelectDropoff({
                           label: place.label,
@@ -344,7 +342,7 @@ function MapHomeInner() {
                 <button
                   key={d.label}
                   type="button"
-                  className="block w-full truncate rounded-lg px-2 py-2 text-left text-sm hover:bg-slate-50"
+                  className="block w-full truncate rounded-lg px-2 py-2.5 text-left text-sm touch-manipulation active:bg-slate-50"
                   onClick={() =>
                     onSelectDropoff({ label: d.label, geo: d.geo, source: "preset" })
                   }
@@ -355,35 +353,35 @@ function MapHomeInner() {
             </div>
           )}
 
-          {booking.pickup && booking.dropoff && (
-            <div className="mt-2 space-y-2 border-t border-slate-100 pt-3">
-              {routeLoading && (
-                <p className="text-xs text-slate-500">{t("Calculating route…", "جاري حساب المسار…")}</p>
-              )}
-              {booking.route && (
-                <p className="text-xs text-slate-600">
-                  {booking.route.distanceKm.toFixed(1)} km · ~{booking.route.durationMinutes}{" "}
-                  min
-                  {booking.route.warning ? ` · ${booking.route.warning}` : ""}
-                </p>
-              )}
-              {routeError && <p className="text-xs text-red-600">{routeError}</p>}
-              <Link
-                href="/booking/route"
-                className="btn-brand block"
-              >
-                {t("Choose ride", "اختر الرحلة")}
-              </Link>
-            </div>
-          )}
+        {booking.pickup && booking.dropoff && (
+          <div className="mt-2 space-y-2 border-t border-slate-100 pt-3">
+            {routeLoading && (
+              <p className="text-xs text-slate-500">
+                {t("Calculating route…", "جاري حساب المسار…")}
+              </p>
+            )}
+            {booking.route && (
+              <p className="text-xs text-slate-600">
+                {booking.route.distanceKm.toFixed(1)} km · ~{booking.route.durationMinutes} min
+                {booking.route.warning ? ` · ${booking.route.warning}` : ""}
+              </p>
+            )}
+            {routeError && <p className="text-xs text-red-600">{routeError}</p>}
+            <button type="button" className="btn-brand w-full touch-manipulation" onClick={goToRoute}>
+              {t("Choose ride", "اختر الرحلة")}
+            </button>
+          </div>
+        )}
 
-          {!session && (
-            <Link href="/login" className="mt-2 block text-center text-sm text-brand underline">
-              {t("Sign in to book", "سجّل الدخول للحجز")}
-            </Link>
-          )}
-        </div>
-      </div>
+        {!session && (
+          <Link
+            href="/login"
+            className="mt-2 block text-center text-sm text-brand underline touch-manipulation"
+          >
+            {t("Sign in to book", "سجّل الدخول للحجز")}
+          </Link>
+        )}
+      </BottomSheet>
     </div>
   );
 }

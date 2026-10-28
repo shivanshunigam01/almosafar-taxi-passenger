@@ -17,7 +17,7 @@ export function RecenterControl({
       aria-label="Recenter map"
       className={
         className ??
-        "absolute right-3 bottom-28 z-[1000] flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg ring-1 ring-black/5"
+        "absolute right-3 bottom-[calc(46dvh+1rem)] z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg ring-1 ring-black/5 touch-manipulation"
       }
       onClick={() => map.setView([target.lat, target.lng], Math.max(map.getZoom(), 14))}
     >
@@ -32,7 +32,7 @@ export function ZoomControls({ className }: { className?: string }) {
     <div
       className={
         className ??
-        "absolute right-3 bottom-40 z-[1000] flex flex-col overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5"
+        "absolute right-3 bottom-[calc(46dvh+4.5rem)] z-[500] flex flex-col overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 touch-manipulation"
       }
     >
       <button

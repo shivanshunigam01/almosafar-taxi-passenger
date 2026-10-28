@@ -67,3 +67,15 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.2s infinite;
 }
+
+/* Leaflet fills the map layer; keep panes below app chrome (Median / WebView tap fix) */
+.passenger-map-layer .leaflet-container {
+  z-index: 0 !important;
+}
+.passenger-map-layer .leaflet-pane {
+  z-index: auto !important;
+}
+.passenger-map-layer .leaflet-top,
+.passenger-map-layer .leaflet-bottom {
+  z-index: 400 !important;
+}
